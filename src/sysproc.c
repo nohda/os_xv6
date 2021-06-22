@@ -39,7 +39,7 @@ sys_kill(void)
 int
 sys_getpid(void)
 {
-  return myproc()->pid;
+  return proc->pid;
 }
 
 int
@@ -50,7 +50,7 @@ sys_sbrk(void)
 
   if(argint(0, &n) < 0)
     return -1;
-  addr = myproc()->sz;
+  addr = proc->sz;
   if(growproc(n) < 0)
     return -1;
   return addr;
@@ -67,7 +67,7 @@ sys_sleep(void)
   acquire(&tickslock);
   ticks0 = ticks;
   while(ticks - ticks0 < n){
-    if(myproc()->killed){
+    if(proc->killed){
       release(&tickslock);
       return -1;
     }
@@ -90,39 +90,13 @@ sys_uptime(void)
   return xticks;
 }
 
-//sys_setnice 20213090
-int				
-sys_setnice(void)		
-{				
-  int pid,nice;			
+int
+sys_halt(void)
+{
+  outw(0xB004, 0x0|0x2000);
+  return 0;
+}
 
-  if(argint(0, &pid) < 0)	
-    return -1;			
-  if(argint(1, &nice) < 0)	
-    return -1;			
-
-  return setnice(pid, nice);	
-}				
-
-//sys_getnice 20213090
-int				
-sys_getnice(void)		
-{				
-  int pid;			
-  if(argint(0, &pid) < 0)	
-    return -1;			
-  return getnice(pid);		
-}				
-
-//sys_ps 20213090
-int				
-sys_ps(void)			
-{				
-  int pid;			
-
-  if(argint(0, &pid) < 0)	
-    return -1;			
-  ps(pid);			
-  return 0;			
-}				
-
+int sys_freemem(void){
+	return freemem();
+}
