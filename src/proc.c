@@ -88,7 +88,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-
+  p->nice = 20; 
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -532,3 +532,68 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+//setnice 20213090
+int							
+setnice(int pid, int nice)                              
+{							
+  struct proc *p;                                       
+  acquire(&ptable.lock);                                
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){   
+    if(p->pid == pid){                                  
+      p->nice = nice;                                   
+      release(&ptable.lock);				
+      return 0;						
+    }							
+  }							
+  release(&ptable.lock);				
+  return -1;						
+}							
+
+
+// getnice 20213090
+int							
+getnice(int pid)					 
+{							
+  struct proc *p;					
+  acquire(&ptable.lock);				
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){	
+    if(p->pid == pid){					
+      release(&ptable.lock);				
+      return p->nice;					
+    }							
+  }							
+  release(&ptable.lock);				
+  return -1;						
+}							
+
+//ps 20213090
+void
+ps(int pid)										
+{											
+  struct proc *p;									
+  int ppid = 0;										
+  int count = 0;									
+  sti();										
+  acquire(&ptable.lock);								
+  cprintf("name \t pid \t ppid \t state \t \t nice \n");				
+ 
+ for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){					
+    ppid = p->parent->pid;								
+    if(pid == 0 || p->pid == pid){							
+      if(p->state == SLEEPING)								
+        cprintf("%s \t %d \t %d \t SLEEPING \t %d\n ", p->name, p->pid, ppid, p->nice); 
+      else if(p->state == RUNNING)						        
+        cprintf("%s \t %d \t %d \t RUNNING \t %d\n ", p->name, p->pid, ppid, p->nice);	
+      else if(p->state == RUNNABLE)							
+        cprintf("%s \t %d \t %d \t RUNNABLE \t %d\n ", p->name, p->pid, ppid, p->nice);	
+    
+      count = count + 1;								
+    }											
+  }  											
+    if(count == 0){									
+      cprintf("Nothing\n");								
+    }											
+  											
+  release(&ptable.lock);								
+}											
